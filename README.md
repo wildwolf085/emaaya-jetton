@@ -1,4 +1,5 @@
-# 🚚 eMaaya smartcontract
+# eMaaya smartcontract
+![eMaaya Logo](./images/logo.png)
 
 ```
 total supply: 1e9
