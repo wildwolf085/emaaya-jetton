@@ -41,4 +41,4 @@ contract EmaayaJetton with Jetton {
         require(ctx.sender == self.owner, "Not owner");
         self.mintable = false;
     }
-} 
+}

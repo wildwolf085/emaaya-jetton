@@ -2,8 +2,8 @@ import { beginCell, contractAddress, toNano, TonClient4, WalletContractV4, inter
 import { mnemonicToPrivateKey } from "ton-crypto";
 import { buildOnchainMetadata } from "./utils/jetton-helpers";
 
-import { SampleJetton, storeMint } from "./output/SampleJetton_SampleJetton";
-import { JettonDefaultWallet, TokenBurn } from "./output/SampleJetton_JettonDefaultWallet";
+import { EmaayaJetton, storeMint } from "./output/EmaayaJetton_EmaayaJetton";
+import { JettonDefaultWallet, TokenBurn } from "./output/EmaayaJetton_JettonDefaultWallet";
 
 import { printSeparator } from "./utils/print";
 import * as dotenv from "dotenv";
@@ -13,7 +13,8 @@ dotenv.config();
     //create client for testnet sandboxv4 API - alternative endpoint
     const client4 = new TonClient4({
         // endpoint: "https://sandbox-v4.tonhubapi.com",
-        endpoint: "https://mainnet-v4.tonhubapi.com",
+        endpoint: "https://testnet-v4.tonhubapi.com",
+        // endpoint: "https://mainnet-v4.tonhubapi.com",
     });
 
     let mnemonics = (process.env.mnemonics_2 || "").toString(); // 🔴 Change to your own, by creating .env file!
@@ -29,21 +30,21 @@ dotenv.config();
         name: "eMaaya",
         description: "Exchange & Bank your digital assets",
         symbol: "eMaaya",
-        image: "https://avatars.githubusercontent.com/u/104382459?s=200&v=4",
+        image: "https://raw.githubusercontent.com/wildwolf085/emaaya-jetton/refs/heads/main/images/logo.png",
     };
 
     // Create content Cell
     let content = buildOnchainMetadata(jettonParams);
-    let max_supply = toNano(123456766689011); // 🔴 Set the specific total supply in nano
+    let max_supply = toNano(1e9); // 🔴 Set the specific total supply in nano
 
     // Compute init data for deployment
     // NOTICE: the parameters inside the init functions were the input for the contract address
     // which means any changes will change the smart contract address as well
-    let init = await SampleJetton.init(deployer_wallet_contract.address, content, max_supply);
+    let init = await EmaayaJetton.init(deployer_wallet_contract.address, content, max_supply);
     let jettonMaster = contractAddress(workchain, init);
     let deployAmount = toNano("0.15");
 
-    let supply = toNano(1000000000); // 🔴 Specify total supply in nano
+    let supply = max_supply // toNano(max_supply); // 🔴 Specify total supply in nano
     let packed_msg = beginCell()
         .store(
             storeMint({
@@ -82,5 +83,5 @@ dotenv.config();
             }),
         ],
     });
-    console.log("====== Deployment message sent to =======\n", jettonMaster);
+    console.log("====== Deployment message sent to =======\n", jettonMaster.toString({testOnly: true}));
 })();
