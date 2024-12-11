@@ -14,8 +14,8 @@ import { TonClient4 } from "@ton/ton";
 import { printSeparator } from "./utils/print";
 
 // -------- Contract SDK --------
-import { SampleJetton, Mint, TokenTransfer } from "./output/SampleJetton_SampleJetton";
-import { JettonDefaultWallet, TokenBurn } from "./output/SampleJetton_JettonDefaultWallet";
+import { EmaayaJetton, Mint, TokenTransfer } from "./output/EmaayaJetton_EmaayaJetton";
+import { JettonDefaultWallet, TokenBurn } from "./output/EmaayaJetton_JettonDefaultWallet";
 
 // -------- DeDust.io SDK --------
 import {
@@ -45,7 +45,7 @@ let max_supply = toNano(1234766689011); // Set the specific total supply in nano
 
 describe("contract", () => {
     let blockchain: Blockchain;
-    let token: SandboxContract<SampleJetton>;
+    let token: SandboxContract<EmaayaJetton>;
     let jettonWallet: SandboxContract<JettonDefaultWallet>;
     let deployer: SandboxContract<TreasuryContract>;
     // let player: SandboxContract<TreasuryContract>;
@@ -57,7 +57,7 @@ describe("contract", () => {
         deployer = await blockchain.treasury("deployer");
         // player = await blockchain.treasury("player");
 
-        token = blockchain.openContract(await SampleJetton.fromInit(deployer.address, content, max_supply));
+        token = blockchain.openContract(await EmaayaJetton.fromInit(deployer.address, content, max_supply));
 
         // Send Transaction
         const deployResult = await token.send(deployer.getSender(), { value: toNano("10") }, "Mint: 100");
@@ -229,7 +229,7 @@ describe("contract", () => {
         });
         const player = await blkch.treasury("player");
 
-        const jettonRoot = blkch.openContract(await SampleJetton.fromInit(player.address, content, max_supply));
+        const jettonRoot = blkch.openContract(await EmaayaJetton.fromInit(player.address, content, max_supply));
         await jettonRoot.send(player.getSender(), { value: toNano("10") }, "Mint: 100");
 
         const tonAmount = toNano("0.1"); // 5 TON
@@ -351,7 +351,8 @@ describe("contract", () => {
             storage: new RemoteBlockchainStorage(
                 wrapTonClient4ForRemote(
                     new TonClient4({
-                        endpoint: "https://mainnet-v4.tonhubapi.com",
+                        // endpoint: "https://mainnet-v4.tonhubapi.com",
+                        endpoint: "https://testnet-v4.tonhubapi.com",
                     })
                 )
             ),
@@ -435,40 +436,3 @@ describe("contract", () => {
         }
     });
 });
-
-// it("should interact with STON.fi router and pool contracts", async () => {
-//     const OWNER_ADDRESS = "YOUR WALLET ADDRESS HERE";
-//     const JETTON0 = "EQDQoc5M3Bh8eWFephi9bClhevelbZZvWhkqdo80XuY_0qXv";
-//     const JETTON1 = "EQC_1YoM8RBixN95lz7odcF3Vrkc_N8Ne7gQi7Abtlet_Efi";
-
-//     const routerData = await router.getData();
-//     const pool = await router.getPool({ jettonAddresses: [JETTON0, JETTON1] });
-
-//     if (!pool) {
-//         throw new Error(`Pool for ${JETTON0}/${JETTON1} not found`);
-//     }
-
-//     const poolData = await pool.getData();
-//     const expectedLiquidityData = await pool.getExpectedLiquidity({
-//         jettonAmount: new tonWeb.utils.BN(toNano("1")),
-//     });
-
-//     const { amount0, amount1 } = expectedLiquidityData;
-
-//     const lpAccountAddress = await pool.getLpAccountAddress({ ownerAddress: OWNER_ADDRESS });
-//     const lpAccount = await pool.getLpAccount({ ownerAddress: OWNER_ADDRESS });
-
-//     if (lpAccount) {
-//         const lpAccountData = await lpAccount.getData();
-//     }
-
-//     // Assertions to verify the data received from STON.fi SDK
-//     expect(poolData).toBeDefined();
-//     expect(expectedLiquidityData).toBeDefined();
-//     expect(lpAccountAddress).toBeDefined();
-
-//     if (lpAccount) {
-//         expect(lpAccountData).toBeDefined();
-//     }
-// });
-// });

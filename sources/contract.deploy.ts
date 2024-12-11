@@ -1,85 +1,84 @@
-import { beginCell, contractAddress, toNano, TonClient4, WalletContractV4, internal, fromNano } from "@ton/ton";
-import { mnemonicToPrivateKey } from "ton-crypto";
-import { buildOnchainMetadata } from "./utils/jetton-helpers";
+import { beginCell, contractAddress, toNano, TonClient4, WalletContractV4, internal, fromNano } from "@ton/ton"; // Import necessary modules from TON library
+import { mnemonicToPrivateKey } from "ton-crypto"; // Import function to convert mnemonic to private key
+import { buildOnchainMetadata } from "./utils/jetton-helpers"; // Import utility to build on-chain metadata
 
-import { EmaayaJetton, storeMint } from "./output/EmaayaJetton_EmaayaJetton";
-import { JettonDefaultWallet, TokenBurn } from "./output/EmaayaJetton_JettonDefaultWallet";
+import { EmaayaJetton, storeMint } from "./output/EmaayaJetton_EmaayaJetton"; // Import jetton contract and minting function
+import { JettonDefaultWallet, TokenBurn } from "./output/EmaayaJetton_JettonDefaultWallet"; // Import default wallet and token burn functions
 
-import { printSeparator } from "./utils/print";
-import * as dotenv from "dotenv";
-dotenv.config();
+import { printSeparator } from "./utils/print"; // Import utility to print separators
+import * as dotenv from "dotenv"; // Import dotenv for environment variable management
+dotenv.config(); // Load environment variables from .env file
 
 (async () => {
-    //create client for testnet sandboxv4 API - alternative endpoint
     const client4 = new TonClient4({
         // endpoint: "https://sandbox-v4.tonhubapi.com",
-        endpoint: "https://testnet-v4.tonhubapi.com",
+        endpoint: "https://testnet-v4.tonhubapi.com", // Set endpoint to testnet
         // endpoint: "https://mainnet-v4.tonhubapi.com",
     });
 
-    let mnemonics = (process.env.mnemonics_2 || "").toString(); // 🔴 Change to your own, by creating .env file!
-    let keyPair = await mnemonicToPrivateKey(mnemonics.split(" "));
-    let secretKey = keyPair.secretKey;
-    let workchain = 0; //we are working in basechain.
-    let deployer_wallet = WalletContractV4.create({ workchain, publicKey: keyPair.publicKey });
-    console.log(deployer_wallet.address);
+    let mnemonics = (process.env.mnemonics_2 || "").toString(); // Retrieve mnemonics from environment variable
+    let keyPair = await mnemonicToPrivateKey(mnemonics.split(" ")); // Convert mnemonics to key pair
+    let secretKey = keyPair.secretKey; // Extract secret key from key pair
+    let workchain = 0; // Set workchain to basechain
+    let deployer_wallet = WalletContractV4.create({ workchain, publicKey: keyPair.publicKey }); // Create deployer wallet
+    console.log(deployer_wallet.address); // Log deployer wallet address
 
-    let deployer_wallet_contract = client4.open(deployer_wallet);
+    let deployer_wallet_contract = client4.open(deployer_wallet); // Open deployer wallet contract
 
-    const jettonParams = {
-        name: "eMaaya",
-        description: "Exchange & Bank your digital assets",
-        symbol: "eMaaya",
-        image: "https://raw.githubusercontent.com/wildwolf085/emaaya-jetton/refs/heads/main/images/logo.png",
+    const jettonParams = { // Define parameters for the jetton
+        name: "eMaaya", // Set jetton name
+        description: "Exchange & Bank your digital assets", // Set jetton description
+        symbol: "eMaaya", // Set jetton symbol
+        image: "https://raw.githubusercontent.com/wildwolf085/emaaya-jetton/refs/heads/main/images/logo.png", // Set emaaya token image URL
     };
 
     // Create content Cell
-    let content = buildOnchainMetadata(jettonParams);
-    let max_supply = toNano(1e9); // 🔴 Set the specific total supply in nano
+    let content = buildOnchainMetadata(jettonParams); // Build on-chain metadata for the jetton
+    let max_supply = toNano(1e9); // Set the specific total supply in nano
 
     // Compute init data for deployment
     // NOTICE: the parameters inside the init functions were the input for the contract address
     // which means any changes will change the smart contract address as well
-    let init = await EmaayaJetton.init(deployer_wallet_contract.address, content, max_supply);
-    let jettonMaster = contractAddress(workchain, init);
-    let deployAmount = toNano("0.15");
+    let init = await EmaayaJetton.init(deployer_wallet_contract.address, content, max_supply); // Initialize the jetton contract
+    let jettonMaster = contractAddress(workchain, init); // Compute the contract address for the jetton master
+    let deployAmount = toNano("0.15"); // Set the amount to deploy in nano
 
-    let supply = max_supply // toNano(max_supply); // 🔴 Specify total supply in nano
-    let packed_msg = beginCell()
-        .store(
-            storeMint({
-                $$type: "Mint",
-                amount: supply,
-                receiver: deployer_wallet_contract.address,
+    let supply = max_supply // toNano(max_supply); // Specify total supply in nano
+    let packed_msg = beginCell() // Start building a new cell for the message
+        .store( // Store the minting message in the cell
+            storeMint({ // Prepare the minting message
+                $$type: "Mint", // Set the message type to Mint
+                amount: supply, // Set the amount to mint
+                receiver: deployer_wallet_contract.address, // Set the receiver to the deployer wallet address
             })
         )
-        .endCell();
+        .endCell(); // End the cell construction
 
-    // send a message on new address contract to deploy it
-    let seqno: number = await deployer_wallet_contract.getSeqno();
-    console.log("🛠️Preparing new outgoing massage from deployment wallet. \n" + deployer_wallet_contract.address);
-    console.log("Seqno: ", seqno + "\n");
-    printSeparator();
+    // Send a message on new address contract to deploy it
+    let seqno: number = await deployer_wallet_contract.getSeqno(); // Get the sequence number for the deployer wallet
+    console.log("🛠️Preparing new outgoing massage from deployment wallet. \n" + deployer_wallet_contract.address); // Log the deployment wallet address
+    console.log("Seqno: ", seqno + "\n"); // Log the sequence number
+    printSeparator(); // Print a separator for clarity
 
     // Get deployment wallet balance
-    let balance: bigint = await deployer_wallet_contract.getBalance();
+    let balance: bigint = await deployer_wallet_contract.getBalance(); // Retrieve the balance of the deployer wallet
 
-    console.log("Current deployment wallet balance = ", fromNano(balance).toString(), "💎TON");
-    console.log("Minting:: ", fromNano(supply));
-    printSeparator();
+    console.log("Current deployment wallet balance = ", fromNano(balance).toString(), "💎TON"); // Log the current balance in TON
+    console.log("Minting:: ", fromNano(supply)); // Log the amount being minted
+    printSeparator(); // Print a separator for clarity
 
-    await deployer_wallet_contract.sendTransfer({
-        seqno,
-        secretKey,
-        messages: [
-            internal({
-                to: jettonMaster,
-                value: deployAmount,
-                init: {
-                    code: init.code,
-                    data: init.data,
+    await deployer_wallet_contract.sendTransfer({ // Send a transfer message to deploy the jetton
+        seqno, // Include the sequence number
+        secretKey, // Include the secret key for authentication
+        messages: [ // Prepare the messages to send
+            internal({ // Create an internal message
+                to: jettonMaster, // Set the recipient to the jetton master address
+                value: deployAmount, // Set the value to deploy
+                init: { // Include initialization data
+                    code: init.code, // Include the contract code
+                    data: init.data, // Include the contract data
                 },
-                body: packed_msg,
+                body: packed_msg, // Include the packed message
             }),
         ],
     });
