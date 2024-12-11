@@ -1,0 +1,10 @@
+{
+    "projects": [{
+        "name": "EmaayaJetton",
+        "path": "./sources/contract.tact",
+        "output": "./sources/output",
+        "options":{
+            
+        }
+    }]
+}
