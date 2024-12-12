@@ -25,19 +25,22 @@ dotenv.config(); // Load environment variables from .env file
     console.log(deployer_wallet.address); // Log deployer wallet address
 
     let deployer_wallet_contract = client4.open(deployer_wallet); // Open deployer wallet contract
-
+    const decimals = !!token_decimals ? Number(token_decimals) : 9
     const jettonParams = { // Define parameters for the jetton
         name: token_name || 'Tether USD',
         symbol: token_symbol || 'USDT',
-        description: token_description || 'Tether USD'
+        description: token_description || 'Tether USD',
+        decimals: String(decimals),
     } as any;
     if (!!token_uri) jettonParams.uri = token_uri
-    if (!!token_decimals) jettonParams.dectoken_decimals = token_decimals
+    // if (!!decimals) jettonParams.dectoken_decimals = decimals
     if (!!token_image) jettonParams.image = token_image
-
+    
+    const ONE = BigInt(10 ** decimals)
+    let MAX_SUPPLY = 1e9; // Set the specific total supply in nano
     // Create content Cell
     let content = buildOnchainMetadata(jettonParams); // Build on-chain metadata for the jetton
-    let max_supply = toNano(1e9); // Set the specific total supply in nano
+    let max_supply = ONE * BigInt(MAX_SUPPLY); // Set the specific total supply in nano
 
     // Compute init data for deployment
     // NOTICE: the parameters inside the init functions were the input for the contract address
@@ -67,7 +70,7 @@ dotenv.config(); // Load environment variables from .env file
     let balance: bigint = await deployer_wallet_contract.getBalance(); // Retrieve the balance of the deployer wallet
 
     console.log("Current deployment wallet balance = ", fromNano(balance).toString(), "💎TON"); // Log the current balance in TON
-    console.log("Minting:: ", fromNano(supply)); // Log the amount being minted
+    console.log("Minting:: ", MAX_SUPPLY); // Log the amount being minted
     printSeparator(); // Print a separator for clarity
 
     await deployer_wallet_contract.sendTransfer({ // Send a transfer message to deploy the jetton
