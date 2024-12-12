@@ -17,6 +17,7 @@ dotenv.config(); // Load environment variables from .env file
     });
 
     let mnemonics = (process.env.mnemonics_2 || "").toString(); // Retrieve mnemonics from environment variable
+    let {token_name, token_uri, token_description, token_symbol, token_decimals, token_image} = process.env
     let keyPair = await mnemonicToPrivateKey(mnemonics.split(" ")); // Convert mnemonics to key pair
     let secretKey = keyPair.secretKey; // Extract secret key from key pair
     let workchain = 0; // Set workchain to basechain
@@ -26,11 +27,13 @@ dotenv.config(); // Load environment variables from .env file
     let deployer_wallet_contract = client4.open(deployer_wallet); // Open deployer wallet contract
 
     const jettonParams = { // Define parameters for the jetton
-        name: "eMaaya", // Set jetton name
-        description: "Exchange & Bank your digital assets", // Set jetton description
-        symbol: "eMaaya", // Set jetton symbol
-        image: "https://raw.githubusercontent.com/wildwolf085/emaaya-jetton/refs/heads/main/images/logo.png", // Set emaaya token image URL
-    };
+        name: token_name || 'Tether USD',
+        symbol: token_symbol || 'USDT',
+        description: token_description || 'Tether USD'
+    } as any;
+    if (!!token_uri) jettonParams.uri = token_uri
+    if (!!token_decimals) jettonParams.dectoken_decimals = token_decimals
+    if (!!token_image) jettonParams.image = token_image
 
     // Create content Cell
     let content = buildOnchainMetadata(jettonParams); // Build on-chain metadata for the jetton
